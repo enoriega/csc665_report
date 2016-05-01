@@ -19,4 +19,65 @@ The motivation is to rank each QA pair by measuring how much evidence supports t
 \subsection{Results}
 
 
-\section{Data Augmentaiton}
+\section{Data Augmentation}
+
+One drawback of QA is the lack of quality training data. Annotating a corpus to extract multiple choice questions is an expensive endeavor, for example, AI2, with a high amount of funding available only provided a training data set of 2.5K multiple choice questions.\\
+On the other hand. There is a lot of information available in the form of other resources, like textbooks, where it is encoded as sentences that aren't necessarily a question. We use this observation to devise a technique to extract candidate questions from these sentences and expand the size of our training data set with the hope to increse the performance of machine learning strategies for QA.\\
+
+\subsection{One pattern - Noun Phrases}
+
+We use the \emph{CoreNLPProcessor}[\ref{corenlp}] class from \emph{Processors}[\ref{processors}] to do a dependency parse over a set of sentences. For each sentence, if there is a noun phrase linked to a root verb, we consider the subtree spanning from an \emph{nsubj} dependency as an answer, and the rest of the tree as a question. Algorithm \ref{nounphrase} depicts the algorithm in the form of pseudocode.\\
+
+\begin{algorithm}\caption{NPhrase QA extraction}\label{nounphrase}\begin{algorithmic}[1]\Procedure{qa\_extraction}{$sen$}   \State $deps = dep\_parse(sen)$
+   \State $root = get_root(deps)$
+   \State $out\_edges = get_out_edges(root)$
+   \ForAll {$edge \in out\_edges$}
+   	\If {$edge.label == nsubj$}
+		\State $a = spanning\_tree(edge)$
+		\State $q = deps - a$
+		\State $qa = (words(q), words(a))$
+		\State \textbf{return} $qa$
+	\EndIf
+   \EndFor   \EndProcedure\end{algorithmic}\end{algorithm}
+   
+\subsection{Restrictions}
+We can't just use any sentence as the source of an \emph{artificial qa}, as many pairs would have an informative question and/or answer. Applying some heuristics allow us to harvest informative mostly qa pairs from text books. The heuristic are applied as filters in cascade:
+\begin{itemize}
+\item \textbf{Stop words}:Ignore sentences the with the following words in their noun phrase: ``figure'', ``table'', ``example'', ``chapter''
+\item \textbf{POS Tags}: Ignore those that only have one word, whose POS tag is either ``PRP'' or ``DT''
+\item \textbf{Nouns}: Consider only those that have at least one noun (A word that has a POS tag starting with N)
+\item \textbf{Nouns again}: Consider only those sentences that have at least a noun in their verbal phrase
+\end{itemize}
+
+\subsection{Alternative answers}
+
+Since we are talking about multiple choice answers, we need three alternative answers for each collected qa pair. To generate these, let's define the \emph{neighborhood} of a question as the $k$ sentences before and the $k$ sentences after in the source document, excluding the considered qa pair itself. Any answer from any question in the neighborhood of $qa$ is an alternative answer for it as long as the following assertions hold:
+
+\begin{itemize}
+\item \textbf{No reduncance}: It is not the same answer as the correct answer
+\item \textbf{Substance}: There is at least a different noun than in the correct answer
+\end{itemize}
+
+\subsection{Statistics}
+
+We ran the algorithm over several textbooks and knowledge bases to collect artificial questions. Table \ref{artificialqa} summarizes the amount of collected questions from each resource.
+
+\begin{table}[htp]
+\caption{Amount of collected artificial \emph{QA}s}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Resource&\# of sen.& \# of artificial QAs\\
+\hline
+CK 12 biology & 16000 & 5000\\
+Simple Wiki & 1 & 1 \\
+\hline
+\end{tabular}
+\end{center}
+\label{artificialqa}
+\end{table}%
+
+We can see that the amount of artificial questions exceed the amount of training data provided for the Kaggle challenge.
+
+\subsection{IR + Artificial QAs}
+We train the IR system using the original training data set and the artificial questions to see if there is a difference in the performance.
