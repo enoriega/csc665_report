@@ -1,2 +1,22 @@
 \section{Information Retrival}
+Our starting point was to develop an \emph{Information Retrieval} system. Traditionally these have been used for automatic question answering. The principle behind them is simple: Query a knowledge base with a question and a candidate answer and fetch a results set.  Gather the result sets of all the candidate answers to a questions and rank them. The highest ranked answer set will be the choice of the system.\\
+
+Our QA system uses Apache Lucene [\ref{lucene}] as its IR engine. The knowledge base is the \emph{Simple English Wikipedia \(Simple Wiki\)}. We indexed Simple Wiki using the default Standard Analyzer, which tokenizes white by white spaces and removes english stop words. To rank the question-answer vectors we use \emph{svm\_rank} [\ref{svmrank}].
+
+\subsection{Features}
+
+We use the following features to train and test the ranker:
+
+\begin{enumerate}
+\item Top \emph{tf-idf} score of the query
+\item \# of query hits in the index
+\item Sum of the \emph{top 100} tf-idf scores divided by the number of documents in the index
+\item \# of items from the \emph{top 100} hits with a normalized tdf-idf score in the bins $[0, 0.25], [0.26, 0.50], [0.51, 0.75],  [0.76, 1.00]$
+\end{enumerate}
+
+The motivation is to rank each QA pair by measuring how much evidence supports the candidate answer in the knowledge base (features 1 and 2) as well as how \emph{confident} is the evidence (features 3 and 4). Observe that feature 4 are really four features, the quartile bins.\\
+
+\subsection{Results}
+
+
 \section{Data Augmentaiton}

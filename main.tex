@@ -20,6 +20,7 @@
 \usepackage{times}
 \usepackage{url}
 \usepackage{latexsym}
+\usepackage{hyperref}
 
 \aclfinalcopy % Uncomment this line for the final submission
 %\def\aclpaperid{***} %  Enter the acl Paper ID here
@@ -52,29 +53,17 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-  This document contains the instructions for preparing a camera-ready
-  manuscript for the proceedings of ACL-2016. The document itself
-  conforms to its own specifications, and is therefore an example of
-  what your manuscript should look like. These instructions should be
-  used for both papers submitted for review and for final versions of
-  accepted papers.  Authors are asked to conform to all the directions
-  reported in this document.
+  
 \end{abstract}
 
 \section{Introduction}
 
-The following instructions are directed to authors of papers submitted
-to ACL-2016 or accepted for publication in its proceedings. All
-authors are required to adhere to these specifications. Authors are
-required to provide a Portable Document Format (PDF) version of their
-papers. \textbf{The proceedings are designed for printing on A4
-paper.}
+Question Answering (QA) is a challenging problem. Systems attempting to solve the problem still don't achieve performance comparable to a human. there are multiple reasons for this. One of them is that many questions require \emph{soft inference}, where traditional information retrieval methods fail. Another reason is that training data is scarce, and coming up with more training data is expensive and requires a lot of effort. \\
 
-We will make more detailed instructions available at
-\url{acl2016.org/index.php?article_id=9}. Please check this website 
-regularly.
+During the course of Spring 16, we pursued some ideas to tackle these two issues. At the end we compare how well the solutions work and do an ensemble model to see how well parallel efforts complement with each other. The code implementing our ideas can be found at:\\ 
+\url{https://github.com/enoriega/cs665.git}\\
 
-
+To do evaluation of our system and our ideas, we use the \emph{AI2 dataset} from its Kaggle challenge.
 \input{enrique.tex}
 
 \input{aditya.tex}
@@ -85,5 +74,7 @@ regularly.
 
 \section{Conclusions}
 
+\bibliography{acl2016}
+\bibliographystyle{acl2016}
 
 \end{document}
