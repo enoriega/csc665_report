@@ -28,9 +28,13 @@ On the other hand. There is a lot of information available in the form of other 
 
 We use the \emph{CoreNLPProcessor}[\ref{corenlp}] class from \emph{Processors}[\ref{processors}] to do a dependency parse over a set of sentences. For each sentence, if there is a noun phrase linked to a root verb, we consider the subtree spanning from an \emph{nsubj} dependency as an answer, and the rest of the tree as a question. Algorithm \ref{nounphrase} depicts the algorithm in the form of pseudocode.\\
 
-\begin{algorithm}\caption{NPhrase QA extraction}\label{nounphrase}\begin{algorithmic}[1]\Procedure{qa\_extraction}{$sen$}   \State $deps = dep\_parse(sen)$
-   \State $root = get_root(deps)$
-   \State $out\_edges = get_out_edges(root)$
+\begin{algorithm}
+\caption{NPhrase QA extraction}\label{nounphrase}
+\begin{algorithmic}[1]
+\Procedure{qa\_extraction}{$sen$}
+   \State $deps = dep\_parse(sen)$
+   \State $root = get\_root(deps)$
+   \State $out\_edges = get\_out\_edges(root)$
    \ForAll {$edge \in out\_edges$}
    	\If {$edge.label == nsubj$}
 		\State $a = spanning\_tree(edge)$
@@ -38,7 +42,10 @@ We use the \emph{CoreNLPProcessor}[\ref{corenlp}] class from \emph{Processors}[\
 		\State $qa = (words(q), words(a))$
 		\State \textbf{return} $qa$
 	\EndIf
-   \EndFor   \EndProcedure\end{algorithmic}\end{algorithm}
+   \EndFor
+   \EndProcedure
+\end{algorithmic}
+\end{algorithm}
    
 \subsection{Restrictions}
 We can't just use any sentence as the source of an \emph{artificial qa}, as many pairs would have an informative question and/or answer. Applying some heuristics allow us to harvest informative mostly qa pairs from text books. The heuristic are applied as filters in cascade:
