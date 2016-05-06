@@ -1,4 +1,4 @@
-\section{Information Retrival}
+\section{Information Retrival (Enrique)}
 Our starting point was to develop an \emph{Information Retrieval} system. Traditionally these have been used for automatic question answering. The principle behind them is simple: Query a knowledge base with a question and a candidate answer and fetch a results set.  Gather the result sets of all the candidate answers to a questions and rank them. The highest ranked answer set will be the choice of the system.\\
 
 Our QA system uses Apache Lucene [\ref{lucene}] as its IR engine. The knowledge base is the \emph{Simple English Wikipedia \(Simple Wiki\)}. We indexed Simple Wiki using the default Standard Analyzer, which tokenizes white by white spaces and removes english stop words. To rank the question-answer vectors we use \emph{svm\_rank} [\ref{svmrank}].
@@ -19,7 +19,7 @@ The motivation is to rank each QA pair by measuring how much evidence supports t
 \subsection{Results}
 
 
-\section{Data Augmentation}
+\section{Data Augmentation (Enrique)}
 
 One drawback of QA is the lack of quality training data. Annotating a corpus to extract multiple choice questions is an expensive endeavor, for example, AI2, with a high amount of funding available only provided a training data set of 2.5K multiple choice questions.\\
 On the other hand. There is a lot of information available in the form of other resources, like textbooks, where it is encoded as sentences that aren't necessarily a question. We use this observation to devise a technique to extract candidate questions from these sentences and expand the size of our training data set with the hope to increse the performance of machine learning strategies for QA.\\
