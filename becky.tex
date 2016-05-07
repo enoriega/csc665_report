@@ -22,19 +22,19 @@ Ben's &  &  &  &  \\
 \end{table}%
 
 \begin{table}[H]
-\caption{Performance (given as precision at 1, P@1) of the ensemble when using the customized voting scales, a set 4-3-2-1 voting scale (Standard), and when allowing models to cast only one vote for their top-ranked candidate (Single).}
+\caption{Performance (given as precision at 1, P@1) of the ensemble when using the personalized voting scales, a set 4-3-2-1 voting scale (Standard), and when allowing models to cast only one vote for their top-ranked candidate (Single).}
 \begin{center}
 \begin{tabular}{lc}
 %\hline
 Voting Method & P@1 \\
 \hline
-Single 		& 	\\
-Standard 	&   \\
-Customized 	&  	\\
+Single 		& 53.9\%	\\
+Standard 	& 52.9\% \\
+Personalized 	& 56.5\% 	\\
 
 \end{tabular}
 \end{center}
 \label{tab:ensemblemethods}
 \end{table}%	
 	
-We compared the performance of the ensemble with this personalized voting to that of a model which used both a set voting scale (i.e. 4 votes for rank 0, 3 votes for rank 1, 2 votes for rank 2, and 1 vote for rank 3) as well as a single vote for only the highest ranked answer candidate.  The comparison of the results of these voting methods is provided in Table~\ref{tab:ensemblemethods}.
+To determine the utility of the personalized voting scale, we compared the impact of voting method on the performance of the ensemble.  For evaluation we used the 506 development questions, and the models which were included were: our IR over simple English wikipedia, the IR of team CS, the best-performing soft-inference feature of team CS, and the system of team MIS.  The voting methods we compared were the personalized voting scale, a standardized voting scale (i.e. 4 votes for rank 0, 3 votes for rank 1, 2 votes for rank 2, and 1 vote for rank 3 for all models), as well as a single vote for only the highest ranked answer candidate.  The comparison of the results of these voting methods is provided in Table~\ref{tab:ensemblemethods}.  By allowing each model to have a personalized voting scale, we had the highest performance (56.5\% P@1, a relative gain of about 5\% over the single-vote method and about 7\% relative gain over the standard-scale method).
