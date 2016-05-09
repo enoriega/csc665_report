@@ -52,10 +52,10 @@ scala-graph [\cite{scala-graph}] to run the tests.
 
 \subsection{Listing paths}
 For any two nodes \emph{v} and \emph{t}, a Depth-First Search (DFS) exhaustively lists
-all paths from \emph{v} to \emph{t} as observed below:
+all paths from \emph{v} to \emph{t} as listed in Algorithm \ref{paths}:
 
 \begin{algorithm}
-\caption{Generate all paths}
+\caption{Generate all paths}\label{paths}
   \begin{algorithmic}[1]
     \Procedure{GENERATE-ALL-PATHS}{G, visited, paths, curPath, v, t}
     \State $curPath.push(v)$
