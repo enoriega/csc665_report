@@ -1,11 +1,11 @@
 \section{WordNet Graph Traversal (Aditya)}
 Similar to most ideas that implement soft inference, we approached the task of chaining
 question/answer word pairs directly by generating meaningful paths of logical consequence
-with the use of WordNet [\ref{wordnet}] graph traversals between entities formed from
+with the use of WordNet [\cite{wordnet}] graph traversals between entities formed from
 each question and answer. Since the mere existence of these paths alone cannot legitimately
 explain the mapping from a question to an answer, we use the word embeddings of the dataset
 trained over a scientific knowledge base. The word embeddings are generated with the 
-continuous bag-of-words (CBOW) model, or \emph{word2vec}, developed by Mikolov et al. 2013 [\ref{w2v}]
+continuous bag-of-words (CBOW) model, or \emph{word2vec}, developed by Mikolov et al. 2013 [\cite{w2v}]
 The vectors are trained from a concatenated text of \emph{Campbell's Dictionary, Barron's Flash Cards,
 and Simple English Wikipedia}.
 
@@ -14,7 +14,7 @@ At the crux of it, WordNet is already a graph of word senses, called synsets. Ea
 an associated part-of-speech (POS) tag associated with it. In the context of QA classification,
 each word in the question and answer ideally constitute to the start vertex of the graph.
 To reduce noise, we only consider nouns, verbs, and adjectives extracted from annotating the 
-questions and answers with the help of the \emph{processors} package [\ref{processors}]. 
+questions and answers with the help of the \emph{processors} package [\cite{processors}].
 In addition, various stop words are filtered from the set of tokens to retain only the focus words. 
 The resultant set becomes the set of start vertices $S$ from which edge information is extracted.
 
@@ -42,16 +42,16 @@ only consider the following word associations:
 \item Similar words that constitute the synonyms of the current synset.
 \end{enumerate}
 
-Given a start vertex $s$, we simply perform a Breadth-First Search (BFS) adding the neighbours of
+We take a start vertex $s$ and simply perform a Breadth-First Search (BFS) adding the neighbours of
 the current node (prescribed by the above edge criteria) to a queue, and iteratively adding the
 neighbours of the nodes in queue. It must be noted that we only traverse the holonymy/hypernymy
 chain and manually add a corresponding meronym/hyponym edge since this greatly reduces the search
 space. Adding the hyponyms/meronyms of the root node not only adds great semantic drift, but 
 also causes the graph order to explode. We use the well-defined implementation of graphs by
-scala-graph [\ref{scala-graph}] to run the tests.
+scala-graph [\cite{scala-graph}] to run the tests.
 
 \subsection{Listing paths}
-Given two nodes \emph{v} and \emph{t}, a simple Depth-First Search (DFS) exhaustively lists
+For any two nodes \emph{v} and \emph{t}, a Depth-First Search (DFS) exhaustively lists
 all paths from \emph{v} to \emph{t} as observed below:
 
 \begin{algorithm}
@@ -75,13 +75,15 @@ all paths from \emph{v} to \emph{t} as observed below:
 \end{algorithm}
 
 \subsection{Scoring a path}
-Given a question \emph{q} and an associated answer \emph{a}, we define the score of a path \emph{p},
+We define the score of a path \emph{p} for a question \emph{q} and an associated answer \emph{a},
 as $$S(q, a, p) = \left(\sum_{k}\log\left\{((\vec{q}+\vec{a}).(\vec{p_{def}}+\vec{p_{set}}))\times N(p_k)\right\}\right)$$\\
 where $N(p_k)$ represents a penalty function based on the position of node in the hypernymy/holonymy tree.
 This is done to ensure that nodes closer to the leaves of the tree are scored higher are than the ones
 near the root(s). $N(p_k)$ is simply 1/$h'$ where $h'$ is the normalized depth of the node in the hypernym tree.
 We sum the logs fundamentally to ensure that longer paths do not get more weightage simply by their
-virtue of longer length.
+virtue of longer length. The process is very CPU-intensive when run over the set of all questions $Q$. Therefore,
+we parallelised the training and loading of graphs to speedup the execution.
+
 
 \subsection{Features}
 Clearly, there are more than one path from an entity in the question to an entity in the answer,
@@ -125,8 +127,8 @@ Accuracy&0.247&0.274&0.25&0.274&0.241\\
 \label{wngraph}
 \end{table}
 
-Clearly, the system is not very informative by itself, performing barely better than chance. Inspecting
-the scores of individual answers, it was evident that the scores were very similar between each answer
+It is evident the system is not very informative by itself, performing barely better than chance. Inspecting
+the scores of individual answers, it was observed that the scores were very similar between each answer
 which emphasizes that each question/answer word pair is very tightly packed with comparable graph
 orders. Therefore, it is prudent to use a knowledge graph sculpted solely for QA classification in the
 science domain, since the word2vec scores of these will be vastly different compared to a dictionary
