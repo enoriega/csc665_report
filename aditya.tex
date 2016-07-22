@@ -1,0 +1,135 @@
+\section{WordNet Graph Traversal (Aditya)}
+Similar to most ideas that implement soft inference, we approached the task of chaining
+question/answer word pairs directly by generating meaningful paths of logical consequence
+with the use of WordNet [\cite{wordnet}] graph traversals between entities formed from
+each question and answer. Since the mere existence of these paths alone cannot legitimately
+explain the mapping from a question to an answer, we use the word embeddings of the dataset
+trained over a scientific knowledge base. The word embeddings are generated with the 
+continuous bag-of-words (CBOW) model, or \emph{word2vec}, developed by Mikolov et al. 2013 [\cite{w2v}]
+The vectors are trained from a concatenated text of \emph{Campbell's Dictionary, Barron's Flash Cards,
+and Simple English Wikipedia}.
+
+\subsection{Construction of graphs}
+At the crux of it, WordNet is already a graph of word senses, called synsets. Each synset has 
+an associated part-of-speech (POS) tag associated with it. In the context of QA classification,
+each word in the question and answer ideally constitute to the start vertex of the graph.
+To reduce noise, we only consider nouns, verbs, and adjectives extracted from annotating the 
+questions and answers with the help of the \emph{processors} package [\cite{processors}].
+In addition, various stop words are filtered from the set of tokens to retain only the focus words. 
+The resultant set becomes the set of start vertices $S$ from which edge information is extracted.
+
+\subsubsection{Word sense disambiguation}
+Given a word \emph{w} in isolation, there are multiple selection criteria to pick and choose the 
+best word sense for a particular context - the simplest being picking the top synset returned by
+WordNet. To direct the search toward the context of the question/answer, we use a simple similarity
+function between the current synset and the context. We define the vector representation of a 
+synset to be the average of the vectors of the lemmas that represent the synset, and the vectors of
+the tokens in the glossary/definition of the synset. This method simply attempts to encompass the
+context of the synset against the knowledge base in use. The best synset for the word, \emph{w} then
+becomes the synset with the highest \emph{cosine similarity} between the context - represented
+by the average vector of the set of tokens in the question/answer, and vector of the synset.
+Formally, the top-$k$ synsets associated with a word, \emph{w} is given by
+$top-K(s, \overline{(\vec{s_{def}}, \vec{s_{set}})}\ \textbf{.}\ \overline{ref})$ where $ref$ is
+the context defined by question/answer.
+
+\subsubsection{Selecting edges}
+For every POS, there are associated word relations that constitute the WordNet graph itself. We 
+only consider the following word associations: 
+
+\begin{enumerate}
+\item Hypernymy/hyponymy chains that represent the \emph{is-a} relation.
+\item Holonymy/meronymy chains that represent the \emph{part-of} and \emph{belongs-to} relations.
+\item Similar words that constitute the synonyms of the current synset.
+\end{enumerate}
+
+We take a start vertex $s$ and simply perform a Breadth-First Search (BFS) adding the neighbours of
+the current node (prescribed by the above edge criteria) to a queue, and iteratively adding the
+neighbours of the nodes in queue. It must be noted that we only traverse the holonymy/hypernymy
+chain and manually add a corresponding meronym/hyponym edge since this greatly reduces the search
+space. Adding the hyponyms/meronyms of the root node not only adds great semantic drift, but 
+also causes the graph order to explode. We use the well-defined implementation of graphs by
+scala-graph [\cite{scala-graph}] to run the tests.
+
+\subsection{Listing paths}
+For any two nodes \emph{v} and \emph{t}, a Depth-First Search (DFS) exhaustively lists
+all paths from \emph{v} to \emph{t} as listed in Algorithm \ref{paths}:
+
+\begin{algorithm}
+\caption{Generate all paths}\label{paths}
+  \begin{algorithmic}[1]
+    \Procedure{GENERATE-ALL-PATHS}{G, visited, paths, curPath, v, t}
+    \State $curPath.push(v)$
+    \State $visited\ +=\ v$
+    \If{$v\ ==\ t$}
+      \State $paths\ +=\ curPath$
+      \Else 
+        \State $w \gets v.neighbors$
+          \If{$!(visited.contains(w))$}
+            \State GENERATE-ALL-PATHS(G, visited, paths, curPath, w, t)
+          \EndIf
+    \EndIf
+    \State $curPath.pop$
+    \State $visited\ -=\ v$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Scoring a path}
+We define the score of a path \emph{p} for a question \emph{q} and an associated answer \emph{a},
+as $$S(q, a, p) = \left(\sum_{k}\log\left\{((\vec{q}+\vec{a}).(\vec{p_{def}}+\vec{p_{set}}))\times N(p_k)\right\}\right)$$\\
+where $N(p_k)$ represents a penalty function based on the position of node in the hypernymy/holonymy tree.
+This is done to ensure that nodes closer to the leaves of the tree are scored higher are than the ones
+near the root(s). $N(p_k)$ is simply 1/$h'$ where $h'$ is the normalized depth of the node in the hypernym tree.
+We sum the logs fundamentally to ensure that longer paths do not get more weightage simply by their
+virtue of longer length. The process is very CPU-intensive when run over the set of all questions $Q$. Therefore,
+we parallelised the training and loading of graphs to speedup the execution.
+
+
+\subsection{Features}
+Clearly, there are more than one path from an entity in the question to an entity in the answer,
+more than one entity per question/answer, and more than one answer per question. To essentially
+train a machine learning model that classifies simply based on out scoring function, we define
+multiple features that will dictate how the classifier makes a predictions on. 
+
+\begin{enumerate}
+\item \# of paths, the average score, and the average path length.
+\item The min/max score, and their corresponding path lengths.
+\item The min/max path lengths, and their corresponding scores.
+\item Graph order: node size, edge size.
+\item Ratio of hypernyms to hyponyms and holonyms to meronyms.
+\item \emph{word2vec} score between question and answer.
+\end{enumerate}
+
+For each question, answer pair, we also look at paths between entities in the question/answer itself.
+We do this because some questions do not have a recognizable entity in the answer and the scores
+invariably become a vector of zeroes. We add a ``\emph{qa\_}'' prefix to differentiate these
+features from the paths denoting \emph{q} $\rightarrow$ \emph{a}.
+
+\subsection{Results}
+After training 1994 questions from the kaggle AI2 datatset, we tested over a 506 question dataset
+as development set. After tuning the hperparameters after each run, table \ref{wngraph} summarizes
+the results we obtained with only the graph traversal as the classifier. It is important to note
+that training on the aritificial questions did not increase the performance by a great factor,
+because each graph is built conjunctively with entities from both the question and the answer.
+Since the artificial questions essentially contain the same focus words, the scores remain virtually
+the same.
+
+\begin{table}[htp]
+\caption{Accuracy of the system}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+C&0.1&1.0&10.0&100.0&1000.0\\\hline
+Accuracy&0.247&0.274&0.25&0.274&0.241\\
+\hline
+\end{tabular}
+\end{center}
+\label{wngraph}
+\end{table}
+
+It is evident the system is not very informative by itself, performing barely better than chance. Inspecting
+the scores of individual answers, it was observed that the scores were very similar between each answer
+which emphasizes that each question/answer word pair is very tightly packed with comparable graph
+orders. Therefore, it is prudent to use a knowledge graph sculpted solely for QA classification in the
+science domain, since the word2vec scores of these will be vastly different compared to a dictionary
+like WordNet.

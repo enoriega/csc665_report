@@ -1,7 +1,7 @@
-\section{Information Retrival}
+\section{Information Retrival (Enrique)}
 Our starting point was to develop an \emph{Information Retrieval} system. Traditionally these have been used for automatic question answering. The principle behind them is simple: Query a knowledge base with a question and a candidate answer and fetch a results set.  Gather the result sets of all the candidate answers to a questions and rank them. The highest ranked answer set will be the choice of the system.\\
 
-Our QA system uses Apache Lucene [\ref{lucene}] as its IR engine. The knowledge base is the \emph{Simple English Wikipedia \(Simple Wiki\)}. We indexed Simple Wiki using the default Standard Analyzer, which tokenizes white by white spaces and removes english stop words. To rank the question-answer vectors we use \emph{svm\_rank} [\ref{svmrank}].
+Our QA system uses Apache Lucene \cite{lucene} as its IR engine. The knowledge base is the \emph{Simple English Wikipedia \(Simple Wiki\)}. We indexed Simple Wiki using the default Standard Analyzer, which tokenizes white by white spaces and removes english stop words. To rank the question-answer vectors we use \emph{svm\_rank} \cite{svmrank}.
 
 \subsection{Features}
 
@@ -18,19 +18,24 @@ The motivation is to rank each QA pair by measuring how much evidence supports t
 
 \subsection{Results}
 
+To measure the performance of the IR model, we further subdivided the training questions into training and dev, where the dev subset comprises 506 questions. Using this data set we got \textbf{0.3 P@1}.
 
-\section{Data Augmentation}
+\section{Data Augmentation (Enrique)}
 
 One drawback of QA is the lack of quality training data. Annotating a corpus to extract multiple choice questions is an expensive endeavor, for example, AI2, with a high amount of funding available only provided a training data set of 2.5K multiple choice questions.\\
 On the other hand. There is a lot of information available in the form of other resources, like textbooks, where it is encoded as sentences that aren't necessarily a question. We use this observation to devise a technique to extract candidate questions from these sentences and expand the size of our training data set with the hope to increse the performance of machine learning strategies for QA.\\
 
 \subsection{One pattern - Noun Phrases}
 
-We use the \emph{CoreNLPProcessor}[\ref{corenlp}] class from \emph{Processors}[\ref{processors}] to do a dependency parse over a set of sentences. For each sentence, if there is a noun phrase linked to a root verb, we consider the subtree spanning from an \emph{nsubj} dependency as an answer, and the rest of the tree as a question. Algorithm \ref{nounphrase} depicts the algorithm in the form of pseudocode.\\
+We use the \emph{CoreNLPProcessor}\cite{corenlp} class from \emph{Processors}\cite{processors} to do a dependency parse over a set of sentences. For each sentence, if there is a noun phrase linked to a root verb, we consider the subtree spanning from an \emph{nsubj} dependency as an answer, and the rest of the tree as a question. Algorithm \ref{nounphrase} depicts the algorithm in the form of pseudocode.\\
 
-\begin{algorithm}\caption{NPhrase QA extraction}\label{nounphrase}\begin{algorithmic}[1]\Procedure{qa\_extraction}{$sen$}   \State $deps = dep\_parse(sen)$
-   \State $root = get_root(deps)$
-   \State $out\_edges = get_out_edges(root)$
+\begin{algorithm}
+\caption{NPhrase QA extraction}\label{nounphrase}
+\begin{algorithmic}[1]
+\Procedure{qa\_extraction}{$sen$}
+   \State $deps = dep\_parse(sen)$
+   \State $root = get\_root(deps)$
+   \State $out\_edges = get\_out\_edges(root)$
    \ForAll {$edge \in out\_edges$}
    	\If {$edge.label == nsubj$}
 		\State $a = spanning\_tree(edge)$
@@ -38,7 +43,10 @@ We use the \emph{CoreNLPProcessor}[\ref{corenlp}] class from \emph{Processors}[\
 		\State $qa = (words(q), words(a))$
 		\State \textbf{return} $qa$
 	\EndIf
-   \EndFor   \EndProcedure\end{algorithmic}\end{algorithm}
+   \EndFor
+   \EndProcedure
+\end{algorithmic}
+\end{algorithm}
    
 \subsection{Restrictions}
 We can't just use any sentence as the source of an \emph{artificial qa}, as many pairs would have an informative question and/or answer. Applying some heuristics allow us to harvest informative mostly qa pairs from text books. The heuristic are applied as filters in cascade:
@@ -81,4 +89,4 @@ Simple Wiki & 383326 & 0\\
 We can see that the amount of artificial questions exceed the amount of training data provided for the Kaggle challenge.
 
 \subsection{IR + Artificial QAs}
-We train the IR system using the original training data set and the artificial questions to see if there is a difference in the performance.
+We train the IR system using the original training data set and the artificial questions to see if there is a difference in the performance. There wasn't any improvement using any of the distribution of artificial questions with original.

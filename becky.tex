@@ -1,0 +1,40 @@
+\section{Ensemble (Becky)}
+\label{sec:ensemble}
+
+We combined each of our models into a voting ensemble.  Rather than each model casting either a single vote for one answer candidate only, each was able to cast 100 votes, distributed across all answer candidates according to the individual model's precision at each rank.
+
+To determine the precision at rank (P@R) for a given model, we ran the model over the development data~\footnote{The development data used here were the 506 questions.}.  For each question, the model ranked the four candidate answers.  The P@R for rank 0 was determined by looking at all of the answer candidates which were ranked in the top position and calculating the precision of those selections.  This is identical to determining the precision at 1 for the model.  Then, to find the P@R 1, we gathered, instead, all of the candidate answers which we ranked in second place and calculated their precision.  The same was done for ranks 2 and 3.  The P@R for a given rank determined how many of the votes were cast by the model to each of the answer candidates in that rank.  The P@Rs for each model in the ensemble are shown in Table \ref{tab:p@r}.
+
+\begin{table}[H]
+\caption{Precision at rank (as a percentage correct at each rank) for each of the models, as determined over the 506 development questions.  These were used to allow for voting scales customized to each model.}
+\begin{center}
+\begin{tabular}{lcccc}
+%\hline
+Model & P@R0 & P@R1 & P@R2 & P@R3\\
+\hline
+IR\_SimpleEng & 34.8 & 26.1 & 20.9 & 18.2 \\
+Paths &  &  &  &  \\
+Ben's &  &  &  &  \\
+
+\end{tabular}
+\end{center}
+\label{tab:p@r}
+\end{table}%
+
+\begin{table}[H]
+\caption{Performance (given as precision at 1, P@1) of the ensemble when using the personalized voting scales, a set 4-3-2-1 voting scale (Standard), and when allowing models to cast only one vote for their top-ranked candidate (Single).}
+\begin{center}
+\begin{tabular}{lc}
+%\hline
+Voting Method & P@1 \\
+\hline
+Single 		& 53.9\%	\\
+Standard 	& 52.9\% \\
+Personalized 	& 56.5\% 	\\
+
+\end{tabular}
+\end{center}
+\label{tab:ensemblemethods}
+\end{table}%	
+	
+To determine the utility of the personalized voting scale, we compared the impact of voting method on the performance of the ensemble.  For evaluation we used the 506 development questions, and the models which were included were: our IR over simple English wikipedia, the IR of team CS, the best-performing soft-inference feature of team CS, and the system of team MIS.  The voting methods we compared were the personalized voting scale, a standardized voting scale (i.e. 4 votes for rank 0, 3 votes for rank 1, 2 votes for rank 2, and 1 vote for rank 3 for all models), as well as a single vote for only the highest ranked answer candidate.  The comparison of the results of these voting methods is provided in Table~\ref{tab:ensemblemethods}.  By allowing each model to have a personalized voting scale, we had the highest performance (56.5\% P@1, a relative gain of about 5\% over the single-vote method and about 7\% relative gain over the standard-scale method).
